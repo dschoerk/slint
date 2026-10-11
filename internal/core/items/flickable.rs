@@ -1208,10 +1208,14 @@ impl FlickableData {
 
         // We should capture the mouse movement, if the flickable can move in this
         // axis, and the mouse has moved more than the threshold in this axis.
-        let should_capture_x = (content_width > flickable_width || flick.content_x() != zero)
-            && abs(mouse_delta.x_length()) > DISTANCE_THRESHOLD;
-        let should_capture_y = (content_height > flickable_height || flick.content_y() != zero)
-            && abs(mouse_delta.y_length()) > DISTANCE_THRESHOLD;
+        let can_pan_x = content_width > flickable_width || flick.content_x() != zero;
+        let can_pan_y = content_height > flickable_height || flick.content_y() != zero;
+        let dx = abs(mouse_delta.x_length());
+        let dy = abs(mouse_delta.y_length());
+        // Along an axis it cannot pan, the movement belongs to the children (e.g. a swipe on a
+        // list row): only take a drag that goes mostly the way the Flickable can move.
+        let should_capture_x = can_pan_x && dx > DISTANCE_THRESHOLD && (can_pan_y || dx >= dy);
+        let should_capture_y = can_pan_y && dy > DISTANCE_THRESHOLD && (can_pan_x || dy >= dx);
         should_capture_x || should_capture_y
     }
 
